@@ -14,7 +14,7 @@ export class ChipTray extends PIXI.Container {
     ]
 
     chips.forEach((data, index) => {
-      const chip = new Chip(data.value, data.color)
+      const chip = new Chip(data.value)
 
       chip.x = index * 90
 

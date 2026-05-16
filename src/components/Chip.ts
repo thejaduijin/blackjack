@@ -2,53 +2,81 @@ import * as PIXI from 'pixi.js'
 import gsap from 'gsap'
 
 export class Chip extends PIXI.Container {
-  value: number
+  amount: number
 
-  constructor(value: number, color: number) {
+  constructor(amount: number) {
     super()
 
-    this.value = value
+    this.amount = amount
 
-    const chip = new PIXI.Graphics()
+    let alias = 'chip_1'
 
-    chip.beginFill(color)
-    chip.drawCircle(0, 0, 35)
-    chip.endFill()
+    switch (amount) {
+      case 1:
+        alias = 'chip_1'
+        break
 
-    const text = new PIXI.Text(String(value), {
-      fill: '#ffffff',
-      fontSize: 20,
-    })
+      case 5:
+        alias = 'chip_5'
+        break
 
-    text.anchor.set(0.5)
+      case 10:
+        alias = 'chip_10'
+        break
 
-    this.addChild(chip, text)
+      case 25:
+        alias = 'chip_25'
+        break
+
+      case 50:
+        alias = 'chip_50'
+        break
+
+      case 100:
+        alias = 'chip_100'
+        break
+    }
+
+    const sprite = PIXI.Sprite.from(alias)
+
+    sprite.anchor.set(0.5)
+
+    sprite.width = 70
+    sprite.height = 70
+
+    this.addChild(sprite)
 
     this.eventMode = 'static'
     this.cursor = 'pointer'
 
     this.on('pointerdown', () => {
+
       gsap.to(this.scale, {
-        x: 0.85,
-        y: 0.85,
-        duration: 0.08,
+        x: 0.9,
+        y: 0.9,
+        duration: 0.1
       })
+
     })
 
     this.on('pointerup', () => {
+
       gsap.to(this.scale, {
         x: 1,
         y: 1,
-        duration: 0.08,
+        duration: 0.1
       })
+
     })
 
     this.on('pointerupoutside', () => {
+
       gsap.to(this.scale, {
         x: 1,
         y: 1,
-        duration: 0.08,
+        duration: 0.1
       })
+
     })
   }
 }

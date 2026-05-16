@@ -17,6 +17,14 @@ export const manifest = {
                 { alias: 'spade_king', src: '/src/assets/cards/spade_king.png' },
                 { alias: 'spade_queen', src: '/src/assets/cards/spade_queen.png' },
                 { alias: 'BACK', src: '/src/assets/cards/back.png' },
+
+                { alias: 'chip_1', src: '/src/assets/chips/chip_1.png' },
+                { alias: 'chip_5', src: '/src/assets/chips/chip_5.png' },
+                { alias: 'chip_10', src: '/src/assets/chips/chip_10.png' },
+                { alias: 'chip_25', src: '/src/assets/chips/chip_25.png' },
+                { alias: 'chip_50', src: '/src/assets/chips/chip_50.png' },
+                { alias: 'chip_100', src: '/src/assets/chips/chip_100.png' },
+
             ],
         },
     ],

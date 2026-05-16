@@ -391,19 +391,24 @@ export class GameScene extends PIXI.Container {
     }
 
     renderPlacedBet(amount: number) {
-        const chip = new Chip(amount, 0xffd700)
+
+        const chip = new Chip(amount)
+
         chip.scale.set(0)
-        const stackOffset = this.betContainer.children.length * 2
+
+        const stackOffset =
+            this.betContainer.children.length * 4
 
         chip.x = 0
         chip.y = -stackOffset
+
         this.betContainer.addChild(chip)
 
         gsap.to(chip.scale, {
             x: 0.7,
             y: 0.7,
             duration: 0.25,
-            ease: 'back.out(1.7)',
+            ease: 'back.out(1.7)'
         })
     }
 
