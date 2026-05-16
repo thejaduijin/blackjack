@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js'
+import gsap from 'gsap'
 
 export class Chip extends PIXI.Container {
   value: number
@@ -25,5 +26,29 @@ export class Chip extends PIXI.Container {
 
     this.eventMode = 'static'
     this.cursor = 'pointer'
+
+    this.on('pointerdown', () => {
+      gsap.to(this.scale, {
+        x: 0.85,
+        y: 0.85,
+        duration: 0.08,
+      })
+    })
+
+    this.on('pointerup', () => {
+      gsap.to(this.scale, {
+        x: 1,
+        y: 1,
+        duration: 0.08,
+      })
+    })
+
+    this.on('pointerupoutside', () => {
+      gsap.to(this.scale, {
+        x: 1,
+        y: 1,
+        duration: 0.08,
+      })
+    })
   }
 }
