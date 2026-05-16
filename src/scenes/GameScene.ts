@@ -165,6 +165,8 @@ export class GameScene extends PIXI.Container {
         this.disableActionButtons()
 
         this.refreshHUD()
+
+        this.betContainer.removeChildren()
     }
 
     addDealer(app: PIXI.Application) {
@@ -192,6 +194,7 @@ export class GameScene extends PIXI.Container {
     createChipTray(app: PIXI.Application) {
         this.chipTray = new ChipTray((amount) => {
             this.betManager.placeBet(amount)
+            this.renderPlacedBet(amount)
             this.refreshHUD()
         })
 
@@ -209,6 +212,7 @@ export class GameScene extends PIXI.Container {
     clearButton(yPos: number) {
         this.clearBtn = new Button('CLEAR', 120, 50, () => {
             this.betManager.clearBet()
+            this.betContainer.removeChildren()
             this.refreshHUD()
         })
 
@@ -219,6 +223,11 @@ export class GameScene extends PIXI.Container {
     undoButton(yPos: number) {
         this.undoBtn = new Button('UNDO', 120, 50, () => {
             this.betManager.undoBet()
+            if (this.betContainer.children.length > 0) {
+                this.betContainer.removeChildAt(
+                    this.betContainer.children.length - 1
+                )
+            }
             this.refreshHUD()
         })
 
