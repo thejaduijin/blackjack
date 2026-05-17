@@ -3,25 +3,25 @@ import * as PIXI from 'pixi.js'
 import { Dealer } from '../components/Dealer'
 import { ChipTray } from '../components/ChipTray'
 import { HUD } from '../components/HUD'
-import { Button } from '../components/Button'
 import { GameManager } from '../managers/GameManager'
 import { BetManager } from '../managers/BetManager'
 import { Card } from '../components/Card'
 import { ResultPopup } from '../components/ResultPopup'
 import { Chip } from '../components/Chip'
 import gsap from 'gsap'
+import { IconButton } from '../components/IconButton'
 
 export class GameScene extends PIXI.Container {
     gameManager = new GameManager()
     betManager = new BetManager()
     showDealerCards = false
-    newGameBtn!: Button
-    clearBtn!: Button
-    undoBtn!: Button
-    doubleBtn!: Button
-    dealBtn!: Button
-    hitBtn!: Button
-    standBtn!: Button
+    newGameBtn!: IconButton
+    clearBtn!: IconButton
+    undoBtn!: IconButton
+    doubleBtn!: IconButton
+    dealBtn!: IconButton
+    hitBtn!: IconButton
+    standBtn!: IconButton
     chipTray!: ChipTray
 
     betSpot!: PIXI.Graphics
@@ -210,18 +210,17 @@ export class GameScene extends PIXI.Container {
     }
 
     clearButton(yPos: number) {
-        this.clearBtn = new Button('CLEAR', 120, 50, () => {
+        this.clearBtn = new IconButton('btn_clear', 'CLEAR', 48, 48, () => {
             this.betManager.clearBet()
             this.betContainer.removeChildren()
             this.refreshHUD()
         })
-
         this.clearBtn.position.set(40, yPos)
         this.addChild(this.clearBtn)
     }
 
     undoButton(yPos: number) {
-        this.undoBtn = new Button('UNDO', 120, 50, () => {
+        this.undoBtn = new IconButton('btn_undo', 'UNDO', 48, 48, () => {
             this.betManager.undoBet()
             if (this.betContainer.children.length > 0) {
                 this.betContainer.removeChildAt(
@@ -230,57 +229,50 @@ export class GameScene extends PIXI.Container {
             }
             this.refreshHUD()
         })
-
-        this.undoBtn.position.set(180, yPos)
+        this.undoBtn.position.set(130, yPos)
         this.addChild(this.undoBtn)
     }
 
     doubleButton(yPos: number) {
-        this.doubleBtn = new Button('DOUBLE', 120, 50, () => {
+        this.doubleBtn = new IconButton('btn_double', 'DOUBLE', 48, 48, () => {
             this.betManager.doubleBet()
             this.refreshHUD()
         })
-
-        this.doubleBtn.position.set(320, yPos)
+        this.doubleBtn.position.set(220, yPos)
         this.addChild(this.doubleBtn)
     }
 
     dealButton(yPos: number) {
-        this.dealBtn = new Button('DEAL', 120, 50, () => {
+        this.dealBtn = new IconButton('btn_deal2', 'DEAL', 48, 48, () => {
             this.startGame()
         })
-
-        this.dealBtn.position.set(460, yPos)
+        this.dealBtn.position.set(310, yPos)
         this.addChild(this.dealBtn)
-
     }
 
     hitButton(app: any, yPos: number) {
-        this.hitBtn = new Button('HIT', 120, 50, () => {
+        this.hitBtn = new IconButton('btn_hand', 'HIT', 48, 48, () => {
             this.hitPlayer()
         })
-
-        this.hitBtn.position.set(app.screen.width - 280, yPos)
+        this.hitBtn.position.set(app.screen.width - 150, yPos)
         this.addChild(this.hitBtn)
     }
 
     standButton(app: any, yPos: number) {
-        this.standBtn = new Button('STAND', 120, 50, () => {
+        this.standBtn = new IconButton('btn_stand', 'STAND', 48, 48, () => {
             this.dealerTurn()
         })
-
-        this.standBtn.position.set(app.screen.width - 140, yPos)
+        this.standBtn.position.set(app.screen.width - 60, yPos)
         this.addChild(this.standBtn);
     }
 
-    newGameButton(app: any) {
-        this.newGameBtn = new Button('NEW GAME', 220, 70, () => {
+    newGameButton(app: any,yPos: number) {
+        this.newGameBtn = new IconButton('btn_new_game', 'NEW GAME', 48, 48, () => {
             this.resetGame()
         })
-
         this.newGameBtn.position.set(
-            app.screen.width - 250,
-            app.screen.height / 2 + 450
+            app.screen.width - 260,
+            yPos
         )
         this.newGameBtn.visible = false;
         this.addChild(this.newGameBtn);
@@ -294,7 +286,7 @@ export class GameScene extends PIXI.Container {
         this.dealButton(buttonY);
         this.hitButton(app, buttonY);
         this.standButton(app, buttonY);
-        this.newGameButton(app);
+        this.newGameButton(app,buttonY);
     }
 
 

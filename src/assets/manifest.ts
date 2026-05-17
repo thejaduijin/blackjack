@@ -3,6 +3,7 @@ export const manifest = {
         {
             name: 'cards',
             assets: [
+                //cards
                 { alias: 'spade_1', src: '/src/assets/cards/spade_1.png' },
                 { alias: 'spade_2', src: '/src/assets/cards/spade_2.png' },
                 { alias: 'spade_3', src: '/src/assets/cards/spade_3.png' },
@@ -18,6 +19,7 @@ export const manifest = {
                 { alias: 'spade_queen', src: '/src/assets/cards/spade_queen.png' },
                 { alias: 'BACK', src: '/src/assets/cards/back.png' },
 
+                //chips
                 { alias: 'chip_1', src: '/src/assets/chips/chip_1.png' },
                 { alias: 'chip_5', src: '/src/assets/chips/chip_5.png' },
                 { alias: 'chip_10', src: '/src/assets/chips/chip_10.png' },
@@ -25,6 +27,21 @@ export const manifest = {
                 { alias: 'chip_50', src: '/src/assets/chips/chip_50.png' },
                 { alias: 'chip_100', src: '/src/assets/chips/chip_100.png' },
 
+                //button icons
+                { alias: 'btn_clear', src: '/src/assets/buttons/clear.png' },
+                { alias: 'btn_deal', src: '/src/assets/buttons/deal.png' },
+                { alias: 'btn_deal2', src: '/src/assets/buttons/deal2.png' },
+                { alias: 'btn_double', src: '/src/assets/buttons/double2.png' },
+                { alias: 'btn_undo', src: '/src/assets/buttons/undo.png' },
+                { alias: 'btn_stand', src: '/src/assets/buttons/stand.png' },
+                { alias: 'btn_new_game', src: '/src/assets/buttons/new_game.png' },
+                { alias: 'btn_hand', src: '/src/assets/buttons/hand.png' },
+                { alias: 'btn_menu', src: '/src/assets/buttons/menu.png' },
+                { alias: 'btn_spade', src: '/src/assets/buttons/spade.png' },
+                { alias: 'btn_volume_on', src: '/src/assets/buttons/volume-1.png' },
+                { alias: 'btn_volume_low', src: '/src/assets/buttons/volume-2.png' },
+                { alias: 'btn_volume_off', src: '/src/assets/buttons/volume-x.png' },
+                { alias: 'btn_2x', src: '/src/assets/buttons/2x.png' },
             ],
         },
     ],
