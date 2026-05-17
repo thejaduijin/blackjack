@@ -199,7 +199,7 @@ export class GameScene extends PIXI.Container {
         })
 
         this.chipTray.x = app.screen.width / 2 - 200
-        this.chipTray.y = app.screen.height - 100
+        this.chipTray.y = app.screen.height - 60
         this.addChild(this.chipTray);
     }
 
@@ -266,7 +266,7 @@ export class GameScene extends PIXI.Container {
         this.addChild(this.standBtn);
     }
 
-    newGameButton(app: any,yPos: number) {
+    newGameButton(app: any, yPos: number) {
         this.newGameBtn = new IconButton('btn_new_game', 'NEW GAME', 48, 48, () => {
             this.resetGame()
         })
@@ -286,7 +286,7 @@ export class GameScene extends PIXI.Container {
         this.dealButton(buttonY);
         this.hitButton(app, buttonY);
         this.standButton(app, buttonY);
-        this.newGameButton(app,buttonY);
+        this.newGameButton(app, buttonY);
     }
 
 
@@ -383,13 +383,10 @@ export class GameScene extends PIXI.Container {
     }
 
     renderPlacedBet(amount: number) {
-
         const chip = new Chip(amount)
-
         chip.scale.set(0)
 
-        const stackOffset =
-            this.betContainer.children.length * 4
+        const stackOffset = this.betContainer.children.length * 4
 
         chip.x = 0
         chip.y = -stackOffset
@@ -397,8 +394,8 @@ export class GameScene extends PIXI.Container {
         this.betContainer.addChild(chip)
 
         gsap.to(chip.scale, {
-            x: 0.7,
-            y: 0.7,
+            x: 0.8,
+            y: 0.8,
             duration: 0.25,
             ease: 'back.out(1.7)'
         })
@@ -418,25 +415,29 @@ export class GameScene extends PIXI.Container {
     }
 
     betSpotCell(app: any) {
-        this.betSpot = new PIXI.Graphics()
-        this.betSpot.beginFill(0x111111, 0.8)
-        this.betSpot.lineStyle(4, 0xffd700)
-        this.betSpot.drawCircle(0, 0, 70)
-        this.betSpot.endFill()
-        this.betSpot.x = app.screen.width / 2
-        this.betSpot.y = app.screen.height - 250
+        this.betSpot = new PIXI.Graphics();
+        this.betSpot
+            .circle(0, 0, 45)
+            .stroke({
+                width: 4,
+                color: 0xff0000
+            })
+            .fill(0x111111);
+
+        this.betSpot.x = app.screen.width / 2;
+        this.betSpot.y = app.screen.height - 250;
         this.addChild(this.betSpot);
 
         this.betContainer.x = this.betSpot.x;
         this.betContainer.y = this.betSpot.y;
         this.addChild(this.betContainer);
 
-        gsap.to(this.betSpot.scale, {
-            x: 1.05,
-            y: 1.05,
-            duration: 1,
-            repeat: -1,
-            yoyo: true,
-        })
+        // gsap.to(this.betSpot.scale, {
+        //     x: 1.05,
+        //     y: 1.05,
+        //     duration: 1,
+        //     repeat: -1,
+        //     yoyo: true,
+        // })
     }
 }
