@@ -37,7 +37,6 @@ export const manifest = {
                 { alias: 'btn_new_game', src: '/src/assets/buttons/new_game.png' },
                 { alias: 'btn_hand', src: '/src/assets/buttons/hand.png' },
                 { alias: 'btn_menu', src: '/src/assets/buttons/menu.png' },
-                { alias: 'btn_spade', src: '/src/assets/buttons/spade.png' },
                 { alias: 'btn_volume_on', src: '/src/assets/buttons/volume-1.png' },
                 { alias: 'btn_volume_low', src: '/src/assets/buttons/volume-2.png' },
                 { alias: 'btn_volume_off', src: '/src/assets/buttons/volume-x.png' },
