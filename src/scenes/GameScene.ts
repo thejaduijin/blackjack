@@ -166,7 +166,8 @@ export class GameScene extends PIXI.Container {
 
         this.refreshHUD()
 
-        this.betContainer.removeChildren()
+        this.betContainer.removeChildren();
+        this.updateBetControls()
     }
 
     addDealer(app: PIXI.Application) {
@@ -174,8 +175,8 @@ export class GameScene extends PIXI.Container {
         this.dealer.y = 120
         this.addChild(this.dealer);
 
-        this.dealerContainer.y = 220
-        this.dealerContainer.x = 400
+        this.dealerContainer.x = app.screen.width / 4;
+        this.dealerContainer.y = app.screen.height / 3;
         this.addChild(this.dealerContainer)
     }
 
@@ -186,8 +187,8 @@ export class GameScene extends PIXI.Container {
     }
 
     addPlayer(app: PIXI.Application) {
-        this.playerContainer.y = app.screen.height - 260
-        this.playerContainer.x = 400
+        this.playerContainer.x = (app.screen.width / 2) + 200;
+        this.playerContainer.y = app.screen.height / 3;
         this.addChild(this.playerContainer)
     }
 
@@ -195,7 +196,8 @@ export class GameScene extends PIXI.Container {
         this.chipTray = new ChipTray((amount) => {
             this.betManager.placeBet(amount)
             this.renderPlacedBet(amount)
-            this.refreshHUD()
+            this.refreshHUD();
+            this.updateBetControls();
         })
 
         this.chipTray.x = app.screen.width / 2 - 200
@@ -213,7 +215,8 @@ export class GameScene extends PIXI.Container {
         this.clearBtn = new IconButton('btn_clear', 'CLEAR', 48, 48, () => {
             this.betManager.clearBet()
             this.betContainer.removeChildren()
-            this.refreshHUD()
+            this.refreshHUD();
+            this.updateBetControls();
         })
         this.clearBtn.position.set(40, yPos)
         this.addChild(this.clearBtn)
@@ -223,11 +226,10 @@ export class GameScene extends PIXI.Container {
         this.undoBtn = new IconButton('btn_undo', 'UNDO', 48, 48, () => {
             this.betManager.undoBet()
             if (this.betContainer.children.length > 0) {
-                this.betContainer.removeChildAt(
-                    this.betContainer.children.length - 1
-                )
+                this.betContainer.removeChildAt(this.betContainer.children.length - 1);
             }
-            this.refreshHUD()
+            this.refreshHUD();
+            this.updateBetControls();
         })
         this.undoBtn.position.set(130, yPos)
         this.addChild(this.undoBtn)
@@ -235,8 +237,9 @@ export class GameScene extends PIXI.Container {
 
     doubleButton(yPos: number) {
         this.doubleBtn = new IconButton('btn_double', 'DOUBLE', 48, 48, () => {
-            this.betManager.doubleBet()
-            this.refreshHUD()
+            this.betManager.doubleBet();
+            this.refreshHUD();
+            this.updateBetControls();
         })
         this.doubleBtn.position.set(220, yPos)
         this.addChild(this.doubleBtn)
@@ -301,6 +304,7 @@ export class GameScene extends PIXI.Container {
         this.addBetText();
         this.createBtn(app)
         this.disableActionButtons();
+        this.updateBetControls();
     }
 
 
@@ -431,13 +435,13 @@ export class GameScene extends PIXI.Container {
         this.betContainer.x = this.betSpot.x;
         this.betContainer.y = this.betSpot.y;
         this.addChild(this.betContainer);
+    }
 
-        // gsap.to(this.betSpot.scale, {
-        //     x: 1.05,
-        //     y: 1.05,
-        //     duration: 1,
-        //     repeat: -1,
-        //     yoyo: true,
-        // })
+    updateBetControls() {
+        const hasBet = this.betManager.currentBet > 0;
+        this.dealBtn.setDisabled(!hasBet);
+        this.clearBtn.setDisabled(!hasBet);
+        this.undoBtn.setDisabled(!hasBet);
+        this.doubleBtn.setDisabled(!hasBet)
     }
 }
