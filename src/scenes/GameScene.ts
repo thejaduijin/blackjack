@@ -15,6 +15,7 @@ export class GameScene extends PIXI.Container {
     gameManager = new GameManager()
     betManager = new BetManager()
     showDealerCards = false
+    isFirstAction = false
     newGameBtn!: IconButton
     clearBtn!: IconButton
     undoBtn!: IconButton
@@ -41,6 +42,31 @@ export class GameScene extends PIXI.Container {
         )
     }
 
+    // startGame() {
+    //     this.disableBettingControls();
+    //     this.enableActionButtons();
+
+    //     this.playerContainer.removeChildren()
+    //     this.dealerContainer.removeChildren()
+    //     this.showDealerCards = false
+    //     this.gameManager.startRound()
+    //     this.dealer.playDealAnimation()
+
+    //     this.renderHands()
+
+    //     if (this.gameManager.playerBlackjack()) {
+    //         this.betManager.balance += this.betManager.currentBet * 2.5
+    //         this.popup.show('BLACKJACK!')
+    //         this.betManager.currentBet = 0
+
+    //         this.refreshHUD();
+
+    //         this.newGameBtn.visible = true
+    //         this.disableGameplayButtons()
+    //         return;
+    //     }
+    // }
+
     startGame() {
         this.disableBettingControls();
         this.enableActionButtons();
@@ -53,20 +79,53 @@ export class GameScene extends PIXI.Container {
 
         this.renderHands()
 
-        if (this.gameManager.playerBlackjack()) {
+        const playerBJ = this.gameManager.playerBlackjack()
+        const dealerBJ = this.gameManager.dealerBlackjack()
+
+        // Both have blackjack → Push
+        if (playerBJ && dealerBJ) {
+            this.showDealerCards = true
+            this.renderHands()
+            this.betManager.balance += this.betManager.currentBet  // return bet only
+            this.popup.show('PUSH!')
+            this.betManager.currentBet = 0
+            this.refreshHUD()
+            this.newGameBtn.visible = true
+            this.disableGameplayButtons()
+            return
+        }
+
+        // Player has blackjack, dealer doesn't → Player wins 3:2
+        if (playerBJ) {
             this.betManager.balance += this.betManager.currentBet * 2.5
             this.popup.show('BLACKJACK!')
             this.betManager.currentBet = 0
-
-            this.refreshHUD();
-
+            this.refreshHUD()
             this.newGameBtn.visible = true
             this.disableGameplayButtons()
-            return;
+            return
         }
+
+        // Dealer has blackjack, player doesn't → Dealer wins, reveal cards
+        if (dealerBJ) {
+            this.showDealerCards = true
+            this.renderHands()
+            this.popup.show('DEALER BLACKJACK!')
+            this.betManager.currentBet = 0
+            this.refreshHUD()
+            this.newGameBtn.visible = true
+            this.disableGameplayButtons()
+            return
+        }
+
+        // Normal round continues — player acts
+        this.isFirstAction = true
+        this.updateActionButtons()
     }
 
     hitPlayer() {
+        this.isFirstAction = false
+        this.updateActionButtons()
         this.gameManager.hitPlayer()
         this.renderHands()
 
@@ -80,20 +139,33 @@ export class GameScene extends PIXI.Container {
         }
     }
 
+    // dealerTurn() {
+    //     this.showDealerCards = true
+    //     this.renderHands()
+
+    //     // DEALER BLACKJACK CHECK HERE
+    //     if (this.gameManager.dealerBlackjack()) {
+    //         this.popup.show('DEALER BLACKJACK!');
+    //         this.betManager.currentBet = 0;
+    //         this.refreshHUD();
+    //         this.newGameBtn.visible = true;
+    //         this.disableGameplayButtons();
+    //         return;
+    //     }
+
+    //     while (this.gameManager.getDealerTotal() < 17) {
+    //         this.gameManager.hitDealer()
+    //     }
+
+    //     this.renderHands()
+    //     this.checkWinner()
+    // }
+
     dealerTurn() {
         this.showDealerCards = true
         this.renderHands()
 
-        // DEALER BLACKJACK CHECK HERE
-        if (this.gameManager.dealerBlackjack()) {
-            this.popup.show('DEALER BLACKJACK!');
-            this.betManager.currentBet = 0;
-            this.refreshHUD();
-            this.newGameBtn.visible = true;
-            this.disableGameplayButtons();
-            return;
-        }
-
+        // S17 rule: dealer stands on 17 or higher (including soft 17)
         while (this.gameManager.getDealerTotal() < 17) {
             this.gameManager.hitDealer()
         }
@@ -157,6 +229,7 @@ export class GameScene extends PIXI.Container {
         this.gameManager.dealerCards = []
 
         this.showDealerCards = false
+        this.isFirstAction = false
         this.newGameBtn.visible = false
         this.popup.visible = false
 
@@ -237,9 +310,10 @@ export class GameScene extends PIXI.Container {
 
     doubleButton(yPos: number) {
         this.doubleBtn = new IconButton('btn_double', 'DOUBLE', 48, 48, () => {
-            this.betManager.doubleBet();
-            this.refreshHUD();
-            this.updateBetControls();
+            this.handleDoubleDown()
+            // this.betManager.doubleBet();
+            // this.refreshHUD();
+            // this.updateBetControls();
         })
         this.doubleBtn.position.set(220, yPos)
         this.addChild(this.doubleBtn)
@@ -387,6 +461,7 @@ export class GameScene extends PIXI.Container {
     }
 
     renderPlacedBet(amount: number) {
+        this.renderBetChips(this.betManager.currentBet)
         const chip = new Chip(amount)
         chip.scale.set(0)
 
@@ -443,5 +518,75 @@ export class GameScene extends PIXI.Container {
         this.clearBtn.setDisabled(!hasBet);
         this.undoBtn.setDisabled(!hasBet);
         this.doubleBtn.setDisabled(!hasBet)
+    }
+
+    handleDoubleDown() {
+        // In-game Double Down
+        if (this.gameManager.playerCards.length > 0) {
+            if (!this.isFirstAction) return
+
+            const success = this.betManager.doubleDown()
+            if (!success) {
+                this.popup.show('NOT ENOUGH BALANCE!')
+                return
+            }
+
+            this.isFirstAction = false
+            this.refreshHUD()
+            this.gameManager.hitPlayer()
+            this.renderHands()
+
+            if (this.gameManager.playerBusted()) {
+                this.popup.show('BUSTED!')
+                this.betManager.currentBet = 0
+                this.refreshHUD()
+                this.newGameBtn.visible = true
+                this.disableGameplayButtons()
+                return
+            }
+
+            this.dealerTurn()
+            return
+        }
+
+        // Pre-deal: double the bet
+        const currentBet = this.betManager.currentBet
+        if (currentBet <= 0) return
+        if (this.betManager.balance < currentBet) return
+
+        this.betManager.doubleBet()
+        this.renderBetChips(this.betManager.currentBet)  // re-render consolidated chips
+        this.refreshHUD()
+        this.updateBetControls()
+    }
+
+    updateActionButtons() {
+        // Double Down only available on first action and if balance covers the bet
+        const canDouble = this.isFirstAction && this.betManager.balance >= this.betManager.currentBet
+        this.doubleBtn.setDisabled(!canDouble)
+    }
+
+    renderBetChips(total: number) {
+        this.betContainer.removeChildren()
+
+        const denominations = [100, 50, 25, 10, 5, 1]
+        const chips: number[] = []
+
+        let remaining = total
+        for (const denom of denominations) {
+            while (remaining >= denom) {
+                chips.push(denom)
+                remaining -= denom
+            }
+        }
+
+        // Render stack bottom to top with offset
+        chips.forEach((denom, index) => {
+            const chip = new Chip(denom)
+            chip.scale.set(0.8)
+            chip.x = 0
+            chip.y = -(index * 6)  // stack upward
+            this.betContainer.addChild(chip)
+        })
     }
 }

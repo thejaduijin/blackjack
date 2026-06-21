@@ -29,4 +29,14 @@ export class BetManager {
   doubleBet() {
     this.placeBet(this.currentBet)
   }
+
+  // In-game Double Down: deducts currentBet from balance once more
+  doubleDown(): boolean {
+    if (this.balance >= this.currentBet) {
+      this.balance -= this.currentBet
+      this.currentBet *= 2
+      return true  // success
+    }
+    return false  // not enough balance
+  }
 }

@@ -1,21 +1,62 @@
+// export function calculateHand(cards: string[]): number {
+//   let total = 0
+//   let aces = 0
+
+//   for (const card of cards) {
+//     if (card.includes('jack')) {
+//       total += 10
+//     } else if (card.includes('queen')) {
+//       total += 10
+//     } else if (card.includes('king')) {
+//       total += 10
+//     } else if (card.includes('1')) {
+//       aces++
+//       total += 11
+//     } else {
+//       const value = Number(card.split('_')[1])
+
+//       total += value
+//     }
+//   }
+
+//   while (total > 21 && aces > 0) {
+//     total -= 10
+//     aces--
+//   }
+
+//   return total
+// }
+
+// export function isBlackjack(cards: string[]): boolean {
+//   return cards.length === 2 && calculateHand(cards) === 21
+// }
+
+// export function isBusted(cards: string[]): boolean {
+//   return calculateHand(cards) > 21
+// }
+
+
+
+
+// Extract rank from card name e.g. 'spade_1' → '1', 'heart_jack' → 'jack'
+function getRank(card: string): string {
+  return card.split('_')[1]
+}
+
 export function calculateHand(cards: string[]): number {
   let total = 0
   let aces = 0
 
   for (const card of cards) {
-    if (card.includes('jack')) {
+    const rank = getRank(card)
+
+    if (rank === 'jack' || rank === 'queen' || rank === 'king') {
       total += 10
-    } else if (card.includes('queen')) {
-      total += 10
-    } else if (card.includes('king')) {
-      total += 10
-    } else if (card.includes('1')) {
+    } else if (rank === '1') {
       aces++
       total += 11
     } else {
-      const value = Number(card.split('_')[1])
-
-      total += value
+      total += Number(rank)  // '2' through '10' all parse cleanly now
     }
   }
 
@@ -33,4 +74,9 @@ export function isBlackjack(cards: string[]): boolean {
 
 export function isBusted(cards: string[]): boolean {
   return calculateHand(cards) > 21
+}
+
+// Helper used in GameScene for insurance check
+export function getDealerUpcard(cards: string[]): string {
+  return getRank(cards[0])  // first card is always the upcard
 }
