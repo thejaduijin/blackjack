@@ -87,6 +87,10 @@ export const manifest = {
                 { alias: 'btn_volume_low', src: '/src/assets/buttons/volume-2.png' },
                 { alias: 'btn_volume_off', src: '/src/assets/buttons/volume-x.png' },
                 { alias: 'btn_2x', src: '/src/assets/buttons/2x.png' },
+                { alias: 'btn_insurance', src: '/src/assets/buttons/btn_insurance.png' },
+
+
+
             ],
         },
     ],

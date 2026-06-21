@@ -10,6 +10,7 @@ import { ResultPopup } from '../components/ResultPopup'
 import { Chip } from '../components/Chip'
 import gsap from 'gsap'
 import { IconButton } from '../components/IconButton'
+import { InsurancePopup } from '../components/InsurancePopup'
 
 export class GameScene extends PIXI.Container {
     gameManager = new GameManager()
@@ -34,6 +35,7 @@ export class GameScene extends PIXI.Container {
     playerContainer = new PIXI.Container()
     dealerContainer = new PIXI.Container()
     betContainer = new PIXI.Container()
+    insurancePopup = new InsurancePopup()
 
     refreshHUD() {
         this.hud.update(
@@ -41,31 +43,6 @@ export class GameScene extends PIXI.Container {
             this.betManager.currentBet
         )
     }
-
-    // startGame() {
-    //     this.disableBettingControls();
-    //     this.enableActionButtons();
-
-    //     this.playerContainer.removeChildren()
-    //     this.dealerContainer.removeChildren()
-    //     this.showDealerCards = false
-    //     this.gameManager.startRound()
-    //     this.dealer.playDealAnimation()
-
-    //     this.renderHands()
-
-    //     if (this.gameManager.playerBlackjack()) {
-    //         this.betManager.balance += this.betManager.currentBet * 2.5
-    //         this.popup.show('BLACKJACK!')
-    //         this.betManager.currentBet = 0
-
-    //         this.refreshHUD();
-
-    //         this.newGameBtn.visible = true
-    //         this.disableGameplayButtons()
-    //         return;
-    //     }
-    // }
 
     startGame() {
         this.disableBettingControls();
@@ -121,6 +98,50 @@ export class GameScene extends PIXI.Container {
         // Normal round continues — player acts
         this.isFirstAction = true
         this.updateActionButtons()
+
+        // Dealer upcard is index 0
+        const dealerUpcard = this.gameManager.dealerCards[0]
+        const isAce = dealerUpcard.split('_')[1] === '1'
+
+        if (isAce) {
+            this.offerInsurance()
+            return
+        }
+    }
+
+    offerInsurance() {
+        const insuranceAmount = Math.floor(this.betManager.currentBet / 2)
+
+        // Skip insurance popup if bet is too small (e.g. $1)
+        if (insuranceAmount === 0) {
+            this.enableActionButtons()
+            this.updateActionButtons()
+            return
+        }
+
+        // Disable player actions while popup is open
+        this.disableActionButtons()
+
+        this.insurancePopup.show(
+            insuranceAmount,
+
+            // onYes
+            () => {
+                const success = this.betManager.placeInsurance()
+                if (!success) {
+                    this.popup.show('NOT ENOUGH BALANCE!')
+                }
+                this.refreshHUD()
+                this.enableActionButtons()
+                this.updateActionButtons()
+            },
+
+            // onNo
+            () => {
+                this.enableActionButtons()
+                this.updateActionButtons()
+            }
+        )
     }
 
     hitPlayer() {
@@ -177,8 +198,16 @@ export class GameScene extends PIXI.Container {
     checkWinner() {
         const player = this.gameManager.getPlayerTotal()
         const dealer = this.gameManager.getDealerTotal()
-
         const bet = this.betManager.currentBet
+
+        // Resolve insurance if it was placed
+        if (this.betManager.insuranceBet > 0) {
+            if (this.gameManager.dealerBlackjack()) {
+                this.betManager.resolveInsuranceWin()
+            } else {
+                this.betManager.resolveInsuranceLoss()
+            }
+        }
 
         if (dealer > 21) {
             this.betManager.balance += bet * 2
@@ -194,11 +223,36 @@ export class GameScene extends PIXI.Container {
         }
 
         this.betManager.currentBet = 0
-
         this.refreshHUD()
         this.newGameBtn.visible = true
         this.disableGameplayButtons()
     }
+
+    // checkWinner() {
+    //     const player = this.gameManager.getPlayerTotal()
+    //     const dealer = this.gameManager.getDealerTotal()
+
+    //     const bet = this.betManager.currentBet
+
+    //     if (dealer > 21) {
+    //         this.betManager.balance += bet * 2
+    //         this.popup.show('PLAYER WINS!')
+    //     } else if (player > dealer) {
+    //         this.betManager.balance += bet * 2
+    //         this.popup.show('PLAYER WINS!')
+    //     } else if (dealer > player) {
+    //         this.popup.show('DEALER WINS!')
+    //     } else {
+    //         this.betManager.balance += bet
+    //         this.popup.show('PUSH!')
+    //     }
+
+    //     this.betManager.currentBet = 0
+
+    //     this.refreshHUD()
+    //     this.newGameBtn.visible = true
+    //     this.disableGameplayButtons()
+    // }
 
     renderHands() {
         this.playerContainer.removeChildren()
@@ -232,6 +286,9 @@ export class GameScene extends PIXI.Container {
         this.isFirstAction = false
         this.newGameBtn.visible = false
         this.popup.visible = false
+
+        this.betManager.insuranceBet = 0
+        this.insurancePopup.visible = false
 
         this.enableGameplayButtons();
         this.enableBettingControls();
@@ -372,13 +429,20 @@ export class GameScene extends PIXI.Container {
         this.addDealer(app);
         this.addPlayer(app);
         this.createChipTray(app);
-        this.createPopUp(app)
         this.createHUD();
         this.betSpotCell(app);
         this.addBetText();
         this.createBtn(app)
         this.disableActionButtons();
         this.updateBetControls();
+        this.createPopUp(app)
+        this.createInsurancePopup(app)
+    }
+
+    createInsurancePopup(app: PIXI.Application) {
+        this.insurancePopup.x = app.screen.width / 2
+        this.insurancePopup.y = app.screen.height / 2
+        this.addChild(this.insurancePopup)
     }
 
 
