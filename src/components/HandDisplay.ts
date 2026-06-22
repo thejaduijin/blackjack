@@ -66,8 +66,10 @@ export class HandDisplay extends PIXI.Container {
         this.badgeText.text = String(total)
 
         // Bet label
-        this.betLabel.text = `$${bet}`
-        this.betLabel.x = lastCardX / 2 + 50
+        // this.betLabel.text = `$${bet}`
+        // this.betLabel.x = lastCardX / 2 + 50
+        // this.betLabel.y = 220
+
 
         // Active hand highlight — gold tint on badge border
         this.badge.clear()
@@ -77,7 +79,7 @@ export class HandDisplay extends PIXI.Container {
         this.badge.lineStyle(2, isActive ? 0xFFD700 : 0x888888)
         this.badge.drawRoundedRect(0, 0, 48, 28, 8)
 
-        this.betLabel.text = bet > 0 ? `$${bet}` : ''
+        // this.betLabel.text = bet > 0 ? `$${bet}` : ''
     }
 
     clear() {
