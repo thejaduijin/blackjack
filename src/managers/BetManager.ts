@@ -3,6 +3,7 @@ export class BetManager {
   currentBet = 0
   history: number[] = []
   insuranceBet = 0
+  splitBet = 0
 
   placeBet(amount: number) {
     if (this.balance >= amount) {
@@ -59,5 +60,19 @@ export class BetManager {
   // Dealer has no BJ → insurance lost
   resolveInsuranceLoss() {
     this.insuranceBet = 0  // already deducted at placement
+  }
+  
+  // Place split bet — equal to current bet
+  placeSplitBet(): boolean {
+    if (this.balance >= this.currentBet) {
+      this.balance -= this.currentBet
+      this.splitBet = this.currentBet
+      return true
+    }
+    return false
+  }
+
+  resetSplitBet() {
+    this.splitBet = 0
   }
 }

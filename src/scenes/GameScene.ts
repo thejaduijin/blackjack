@@ -11,6 +11,8 @@ import { Chip } from '../components/Chip'
 import gsap from 'gsap'
 import { IconButton } from '../components/IconButton'
 import { InsurancePopup } from '../components/InsurancePopup'
+import { HandDisplay } from '../components/HandDisplay'
+import { calculateHand } from '../utils/BlackjackUtils'
 
 export class GameScene extends PIXI.Container {
     gameManager = new GameManager()
@@ -25,6 +27,7 @@ export class GameScene extends PIXI.Container {
     hitBtn!: IconButton
     standBtn!: IconButton
     chipTray!: ChipTray
+    splitBtn!: IconButton
 
     betSpot!: PIXI.Graphics
 
@@ -37,6 +40,10 @@ export class GameScene extends PIXI.Container {
     betContainer = new PIXI.Container()
     insurancePopup = new InsurancePopup()
 
+    handDisplay0 = new HandDisplay()   // main hand (or left split hand)
+    handDisplay1 = new HandDisplay()   // right split hand (hidden when not split)
+    dealerHandDisplay = new HandDisplay()
+
     refreshHUD() {
         this.hud.update(
             this.betManager.balance,
@@ -44,9 +51,16 @@ export class GameScene extends PIXI.Container {
         )
     }
 
+    enableHand() {
+        this.dealerHandDisplay.visible = true;
+        this.handDisplay0.visible = true;
+        this.handDisplay1.visible = true;
+    }
+
     startGame() {
         this.disableBettingControls();
         this.enableActionButtons();
+        this.enableHand();
 
         this.playerContainer.removeChildren()
         this.dealerContainer.removeChildren()
@@ -144,6 +158,22 @@ export class GameScene extends PIXI.Container {
         )
     }
 
+    // hitPlayer() {
+    //     this.isFirstAction = false
+    //     this.updateActionButtons()
+    //     this.gameManager.hitPlayer()
+    //     this.renderHands()
+
+    //     if (this.gameManager.playerBusted()) {
+    //         console.log('PLAYER BUSTED')
+    //         this.popup.show('BUSTED!')
+    //         this.betManager.currentBet = 0
+    //         this.refreshHUD()
+    //         this.newGameBtn.visible = true
+    //         this.disableGameplayButtons()
+    //     }
+    // }
+
     hitPlayer() {
         this.isFirstAction = false
         this.updateActionButtons()
@@ -151,12 +181,24 @@ export class GameScene extends PIXI.Container {
         this.renderHands()
 
         if (this.gameManager.playerBusted()) {
-            console.log('PLAYER BUSTED')
-            this.popup.show('BUSTED!')
-            this.betManager.currentBet = 0
-            this.refreshHUD()
-            this.newGameBtn.visible = true
-            this.disableGameplayButtons()
+            if (this.gameManager.isSplit && !this.gameManager.isLastHand()) {
+                // Hand 0 busted — move to hand 1
+                this.popup.show('BUSTED! NEXT HAND')
+                this.gameManager.nextHand()
+                this.isFirstAction = true
+                setTimeout(() => {
+                    this.popup.visible = false
+                    this.renderHands()
+                    this.updateActionButtons()
+                }, 1000)
+            } else {
+                // Last hand or no split — end round
+                this.popup.show('BUSTED!')
+                this.betManager.currentBet = 0
+                this.refreshHUD()
+                this.newGameBtn.visible = true
+                this.disableGameplayButtons()
+            }
         }
     }
 
@@ -183,10 +225,19 @@ export class GameScene extends PIXI.Container {
     // }
 
     dealerTurn() {
+        // If split and on hand 0 — move to hand 1 first
+        if (this.gameManager.isSplit && !this.gameManager.isLastHand()) {
+            this.gameManager.nextHand()
+            this.isFirstAction = true
+            this.renderHands()
+            this.updateActionButtons()
+            return
+        }
+
+        // All hands done — dealer plays
         this.showDealerCards = true
         this.renderHands()
 
-        // S17 rule: dealer stands on 17 or higher (including soft 17)
         while (this.gameManager.getDealerTotal() < 17) {
             this.gameManager.hitDealer()
         }
@@ -195,12 +246,57 @@ export class GameScene extends PIXI.Container {
         this.checkWinner()
     }
 
-    checkWinner() {
-        const player = this.gameManager.getPlayerTotal()
-        const dealer = this.gameManager.getDealerTotal()
-        const bet = this.betManager.currentBet
+    // dealerTurn() {
+    //     this.showDealerCards = true
+    //     this.renderHands()
 
-        // Resolve insurance if it was placed
+    //     // S17 rule: dealer stands on 17 or higher (including soft 17)
+    //     while (this.gameManager.getDealerTotal() < 17) {
+    //         this.gameManager.hitDealer()
+    //     }
+
+    //     this.renderHands()
+    //     this.checkWinner()
+    // }
+
+    // checkWinner() {
+    //     const player = this.gameManager.getPlayerTotal()
+    //     const dealer = this.gameManager.getDealerTotal()
+    //     const bet = this.betManager.currentBet
+
+    //     // Resolve insurance if it was placed
+    //     if (this.betManager.insuranceBet > 0) {
+    //         if (this.gameManager.dealerBlackjack()) {
+    //             this.betManager.resolveInsuranceWin()
+    //         } else {
+    //             this.betManager.resolveInsuranceLoss()
+    //         }
+    //     }
+
+    //     if (dealer > 21) {
+    //         this.betManager.balance += bet * 2
+    //         this.popup.show('PLAYER WINS!')
+    //     } else if (player > dealer) {
+    //         this.betManager.balance += bet * 2
+    //         this.popup.show('PLAYER WINS!')
+    //     } else if (dealer > player) {
+    //         this.popup.show('DEALER WINS!')
+    //     } else {
+    //         this.betManager.balance += bet
+    //         this.popup.show('PUSH!')
+    //     }
+
+    //     this.betManager.currentBet = 0
+    //     this.refreshHUD()
+    //     this.newGameBtn.visible = true
+    //     this.disableGameplayButtons()
+    // }
+
+
+    checkWinner() {
+        const dealer = this.gameManager.getDealerTotal()
+
+        // Resolve insurance
         if (this.betManager.insuranceBet > 0) {
             if (this.gameManager.dealerBlackjack()) {
                 this.betManager.resolveInsuranceWin()
@@ -209,20 +305,51 @@ export class GameScene extends PIXI.Container {
             }
         }
 
-        if (dealer > 21) {
-            this.betManager.balance += bet * 2
-            this.popup.show('PLAYER WINS!')
-        } else if (player > dealer) {
-            this.betManager.balance += bet * 2
-            this.popup.show('PLAYER WINS!')
-        } else if (dealer > player) {
-            this.popup.show('DEALER WINS!')
+        if (this.gameManager.isSplit) {
+            let resultMsg = ''
+            let totalWin = 0
+
+            for (let i = 0; i < 2; i++) {
+                const handTotal = this.gameManager.getHandTotal(i)
+                const bet = i === 0 ? this.betManager.currentBet : this.betManager.splitBet
+                const busted = handTotal > 21
+
+                if (busted) {
+                    resultMsg += `H${i + 1}: LOSE  `
+                } else if (dealer > 21 || handTotal > dealer) {
+                    totalWin += bet * 2
+                    resultMsg += `H${i + 1}: WIN  `
+                } else if (handTotal === dealer) {
+                    totalWin += bet
+                    resultMsg += `H${i + 1}: PUSH  `
+                } else {
+                    resultMsg += `H${i + 1}: LOSE  `
+                }
+            }
+
+            this.betManager.balance += totalWin
+            this.betManager.currentBet = 0
+            this.betManager.resetSplitBet()
+            this.popup.show(resultMsg.trim())
+
         } else {
-            this.betManager.balance += bet
-            this.popup.show('PUSH!')
+            // Normal single hand resolution
+            const player = this.gameManager.getPlayerTotal()
+            const bet = this.betManager.currentBet
+
+            if (dealer > 21 || player > dealer) {
+                this.betManager.balance += bet * 2
+                this.popup.show('PLAYER WINS!')
+            } else if (dealer > player) {
+                this.popup.show('DEALER WINS!')
+            } else {
+                this.betManager.balance += bet
+                this.popup.show('PUSH!')
+            }
+
+            this.betManager.currentBet = 0
         }
 
-        this.betManager.currentBet = 0
         this.refreshHUD()
         this.newGameBtn.visible = true
         this.disableGameplayButtons()
@@ -258,29 +385,138 @@ export class GameScene extends PIXI.Container {
         this.playerContainer.removeChildren()
         this.dealerContainer.removeChildren()
 
-        this.gameManager.playerCards.forEach((value, index) => {
-            const card = new Card(value)
-            card.x = index * 90
-            this.playerContainer.addChild(card)
+        const visibleDealerCards = this.gameManager.dealerCards.map((value, index) => {
+            if (index === 1 && !this.showDealerCards) return 'BACK'
+            return value
         })
 
+        visibleDealerCards.forEach((cardValue, index) => {
+            const card = new Card(cardValue)
+            card.x = index * 20
+            card.y = index * 20
+            this.dealerContainer.addChild(card)
+        })
+        const dealerTotal = this.showDealerCards
+            ? this.gameManager.getDealerTotal()
+            : calculateHand([this.gameManager.dealerCards[0]])  // upcard only
+
+        this.dealerHandDisplay.render(
+            visibleDealerCards,
+            dealerTotal,
+            0,      // no bet label for dealer
+            false   // never "active" highlight for dealer
+        )
+        // Dealer cards — always use dealerContainer
         this.gameManager.dealerCards.forEach((value, index) => {
             let cardValue = value
             if (index === 1 && !this.showDealerCards) {
                 cardValue = 'BACK'
             }
             const card = new Card(cardValue)
-            card.x = index * 90
+            card.x = index * 20
+            card.y = index * 20
             this.dealerContainer.addChild(card)
         })
+
+        // Player cards — ALWAYS use HandDisplay0 for normal play too
+        if (this.gameManager.isSplit) {
+            this.handDisplay0.visible = true
+            this.handDisplay1.visible = true
+
+            this.handDisplay0.render(
+                this.gameManager.splitHands[0],
+                this.gameManager.getHandTotal(0),
+                this.betManager.currentBet,
+                this.gameManager.activeHandIndex === 0
+            )
+
+            this.handDisplay1.render(
+                this.gameManager.splitHands[1],
+                this.gameManager.getHandTotal(1),
+                this.betManager.splitBet,
+                this.gameManager.activeHandIndex === 1
+            )
+
+        } else {
+            // Normal play — use handDisplay0, hide handDisplay1
+            this.handDisplay0.visible = true
+            this.handDisplay1.visible = false
+
+            this.handDisplay0.render(
+                this.gameManager.playerCards,
+                this.gameManager.getPlayerTotal(),
+                this.betManager.currentBet,
+                true  // always active in normal play
+            )
+        }
+    }
+
+    // renderHands() {
+    //     this.playerContainer.removeChildren()
+    //     this.dealerContainer.removeChildren()
+
+    //     this.gameManager.playerCards.forEach((value, index) => {
+    //         const card = new Card(value)
+    //         card.x = index * 90
+    //         this.playerContainer.addChild(card)
+    //     })
+
+    //     this.gameManager.dealerCards.forEach((value, index) => {
+    //         let cardValue = value
+    //         if (index === 1 && !this.showDealerCards) {
+    //             cardValue = 'BACK'
+    //         }
+    //         const card = new Card(cardValue)
+    //         card.x = index * 90
+    //         this.dealerContainer.addChild(card)
+    //     })
+    // }
+
+    // resetGame() {
+    //     this.playerContainer.removeChildren()
+    //     this.dealerContainer.removeChildren()
+
+    //     this.gameManager.playerCards = []
+    //     this.gameManager.dealerCards = []
+
+    //     this.showDealerCards = false
+    //     this.isFirstAction = false
+    //     this.newGameBtn.visible = false
+    //     this.popup.visible = false
+
+    //     this.betManager.insuranceBet = 0
+    //     this.insurancePopup.visible = false
+
+    //     this.enableGameplayButtons();
+    //     this.enableBettingControls();
+    //     this.disableActionButtons()
+
+    //     this.refreshHUD()
+
+    //     this.betContainer.removeChildren();
+    //     this.updateBetControls()
+    // }
+
+    disableHand() {
+        this.dealerHandDisplay.visible = false;
+        this.handDisplay0.visible = false;
+        this.handDisplay1.visible = false;
     }
 
     resetGame() {
         this.playerContainer.removeChildren()
         this.dealerContainer.removeChildren()
+        this.handDisplay0.clear()
+        this.handDisplay1.clear()
+        this.dealerHandDisplay.clear()
+        this.handDisplay1.visible = false
+        this.playerContainer.visible = true
 
         this.gameManager.playerCards = []
         this.gameManager.dealerCards = []
+        this.gameManager.isSplit = false
+        this.gameManager.splitHands = [[], []]
+        this.gameManager.activeHandIndex = 0
 
         this.showDealerCards = false
         this.isFirstAction = false
@@ -288,26 +524,45 @@ export class GameScene extends PIXI.Container {
         this.popup.visible = false
 
         this.betManager.insuranceBet = 0
+        this.betManager.resetSplitBet()
         this.insurancePopup.visible = false
 
-        this.enableGameplayButtons();
-        this.enableBettingControls();
+        this.enableGameplayButtons()
+        this.enableBettingControls()
         this.disableActionButtons()
 
         this.refreshHUD()
-
-        this.betContainer.removeChildren();
+        this.betContainer.removeChildren()
         this.updateBetControls()
+
+        this.disableHand();
     }
+
+    // addDealer(app: PIXI.Application) {
+    //     this.dealer.x = app.screen.width / 2
+    //     this.dealer.y = 120
+    //     this.addChild(this.dealer);
+
+    //     this.dealerContainer.x = app.screen.width / 4;
+    //     this.dealerContainer.y = app.screen.height / 3;
+    //     this.addChild(this.dealerContainer)
+    // }
 
     addDealer(app: PIXI.Application) {
         this.dealer.x = app.screen.width / 2
         this.dealer.y = 120
-        this.addChild(this.dealer);
+        this.addChild(this.dealer)
 
-        this.dealerContainer.x = app.screen.width / 4;
-        this.dealerContainer.y = app.screen.height / 3;
+        // Keep dealerContainer for card sprites
+        this.dealerContainer.x = app.screen.width / 4
+        this.dealerContainer.y = app.screen.height / 3
         this.addChild(this.dealerContainer)
+
+        // Dealer HandDisplay — same position as dealerContainer
+        this.dealerHandDisplay.x = app.screen.width / 4
+        this.dealerHandDisplay.y = app.screen.height / 3
+        this.dealerHandDisplay.visible = false;
+        this.addChild(this.dealerHandDisplay)
     }
 
     createHUD() {
@@ -316,10 +571,59 @@ export class GameScene extends PIXI.Container {
         this.addChild(this.hud)
     }
 
+    // addPlayer(app: PIXI.Application) {
+    //     this.playerContainer.x = (app.screen.width / 2) + 200;
+    //     this.playerContainer.y = app.screen.height / 3;
+    //     this.addChild(this.playerContainer)
+    // }
+
     addPlayer(app: PIXI.Application) {
-        this.playerContainer.x = (app.screen.width / 2) + 200;
-        this.playerContainer.y = app.screen.height / 3;
-        this.addChild(this.playerContainer)
+        // Hand 0 — main player hand position (right side)
+        this.handDisplay0.x = app.screen.width / 2 + 100
+        this.handDisplay0.y = app.screen.height / 3
+        this.handDisplay0.visible = false;
+        this.addChild(this.handDisplay0)
+
+        // Hand 1 — split second hand (further right), hidden until split
+        this.handDisplay1.x = app.screen.width / 2 + 350
+        this.handDisplay1.y = app.screen.height / 3
+        this.handDisplay1.visible = false
+        this.addChild(this.handDisplay1)
+    }
+
+    splitButton(app: any, yPos: number) {
+        this.splitBtn = new IconButton('btn_split', 'SPLIT', 48, 48, () => {
+            this.handleSplit()
+        })
+        this.splitBtn.position.set(app.screen.width - 230, yPos)
+        this.addChild(this.splitBtn)
+    }
+
+    handleSplit() {
+        if (!this.isFirstAction) return
+        if (!this.gameManager.canSplit()) return
+
+        const success = this.betManager.placeSplitBet()
+        if (!success) {
+            this.popup.show('NOT ENOUGH BALANCE!')
+            return
+        }
+
+        this.gameManager.executeSplit()
+        this.isFirstAction = true  // first action resets for new hand
+        this.renderHands()
+        this.refreshHUD()
+
+        // Split Aces — one card each, auto-stand both
+        if (this.gameManager.isSplitAces()) {
+            this.popup.show('SPLIT ACES — ONE CARD EACH')
+            this.disableActionButtons()
+            setTimeout(() => this.dealerTurn(), 1500)
+            return
+        }
+
+        this.updateActionButtons()
+        this.splitBtn.setDisabled(true)  // no resplit
     }
 
     createChipTray(app: PIXI.Application) {
@@ -405,7 +709,7 @@ export class GameScene extends PIXI.Container {
             this.resetGame()
         })
         this.newGameBtn.position.set(
-            app.screen.width - 260,
+            app.screen.width - 340,
             yPos
         )
         this.newGameBtn.visible = false;
@@ -421,6 +725,7 @@ export class GameScene extends PIXI.Container {
         this.hitButton(app, buttonY);
         this.standButton(app, buttonY);
         this.newGameButton(app, buttonY);
+        this.splitButton(app, buttonY)
     }
 
 
@@ -511,17 +816,23 @@ export class GameScene extends PIXI.Container {
     }
 
     disableActionButtons() {
+        if (!this.hitBtn || !this.standBtn || !this.splitBtn) return
         this.hitBtn.eventMode = 'none'
         this.standBtn.eventMode = 'none'
+        this.splitBtn.eventMode = 'none'
         this.hitBtn.alpha = 0.5
         this.standBtn.alpha = 0.5
+        this.splitBtn.alpha = 0.5
     }
 
     enableActionButtons() {
+        if (!this.hitBtn || !this.standBtn || !this.splitBtn) return
         this.hitBtn.eventMode = 'static'
         this.standBtn.eventMode = 'static'
+        this.splitBtn.eventMode = 'static'
         this.hitBtn.alpha = 1
         this.standBtn.alpha = 1
+        this.splitBtn.alpha = 1
     }
 
     renderPlacedBet(amount: number) {
@@ -625,9 +936,11 @@ export class GameScene extends PIXI.Container {
     }
 
     updateActionButtons() {
-        // Double Down only available on first action and if balance covers the bet
         const canDouble = this.isFirstAction && this.betManager.balance >= this.betManager.currentBet
+        const canSplit = this.isFirstAction && this.gameManager.canSplit() && !this.gameManager.isSplit
+
         this.doubleBtn.setDisabled(!canDouble)
+        this.splitBtn.setDisabled(!canSplit)
     }
 
     renderBetChips(total: number) {
