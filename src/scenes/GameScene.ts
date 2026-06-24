@@ -629,7 +629,7 @@ export class GameScene extends PIXI.Container {
     createChipTray(app: PIXI.Application) {
         this.chipTray = new ChipTray((amount) => {
             this.betManager.placeBet(amount)
-            this.renderPlacedBet(amount)
+            this.renderPlacedBet()
             this.refreshHUD();
             this.updateBetControls();
         })
@@ -835,24 +835,8 @@ export class GameScene extends PIXI.Container {
         this.splitBtn.alpha = 1
     }
 
-    renderPlacedBet(amount: number) {
+    renderPlacedBet() {
         this.renderBetChips(this.betManager.currentBet)
-        const chip = new Chip(amount)
-        chip.scale.set(0)
-
-        const stackOffset = this.betContainer.children.length * 4
-
-        chip.x = 0
-        chip.y = -stackOffset
-
-        this.betContainer.addChild(chip)
-
-        gsap.to(chip.scale, {
-            x: 0.8,
-            y: 0.8,
-            duration: 0.25,
-            ease: 'back.out(1.7)'
-        })
     }
 
     addBetText() {
