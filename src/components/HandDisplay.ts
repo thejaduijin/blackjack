@@ -46,7 +46,7 @@ export class HandDisplay extends PIXI.Container {
 
     render(cardNames: string[], total: number, bet: number, isActive: boolean) {
         this.cards.removeChildren()
-
+        console.log(bet);
         // Overlapping stack — each card offset by 20px down and right
         cardNames.forEach((name, index) => {
             const card = new Card(name)
