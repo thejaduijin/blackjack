@@ -38,6 +38,10 @@ export class GameScene extends PIXI.Container {
     playerContainer = new PIXI.Container()
     dealerContainer = new PIXI.Container()
     betContainer = new PIXI.Container()
+    gameControlContainer = new PIXI.Container()
+    gamePlayContainer = new PIXI.Container()
+
+
     insurancePopup = new InsurancePopup()
 
     handDisplay0 = new HandDisplay()   // main hand (or left split hand)
@@ -58,6 +62,9 @@ export class GameScene extends PIXI.Container {
     }
 
     startGame() {
+        this.gameControlContainer.visible = false;
+        this.gamePlayContainer.visible = true;
+
         this.disableBettingControls();
         this.enableActionButtons();
         this.enableHand();
@@ -536,6 +543,8 @@ export class GameScene extends PIXI.Container {
         this.updateBetControls()
 
         this.disableHand();
+
+        this.gamePlayContainer.visible = false;
     }
 
     // addDealer(app: PIXI.Application) {
@@ -596,7 +605,9 @@ export class GameScene extends PIXI.Container {
             this.handleSplit()
         })
         this.splitBtn.position.set(app.screen.width - 230, yPos)
-        this.addChild(this.splitBtn)
+        this.gamePlayContainer.addChild(this.splitBtn);
+
+        // this.addChild(this.splitBtn)
     }
 
     handleSplit() {
@@ -653,7 +664,8 @@ export class GameScene extends PIXI.Container {
             this.updateBetControls();
         })
         this.clearBtn.position.set(40, yPos)
-        this.addChild(this.clearBtn)
+        this.gameControlContainer.addChild(this.clearBtn);
+        this.addChild(this.gameControlContainer);
     }
 
     undoButton(yPos: number) {
@@ -666,7 +678,8 @@ export class GameScene extends PIXI.Container {
             this.updateBetControls();
         })
         this.undoBtn.position.set(130, yPos)
-        this.addChild(this.undoBtn)
+        this.gameControlContainer.addChild(this.undoBtn);
+        // this.addChild(this.undoBtn)
     }
 
     doubleButton(yPos: number) {
@@ -677,7 +690,9 @@ export class GameScene extends PIXI.Container {
             // this.updateBetControls();
         })
         this.doubleBtn.position.set(220, yPos)
-        this.addChild(this.doubleBtn)
+        this.gameControlContainer.addChild(this.doubleBtn);
+
+        // this.addChild(this.doubleBtn)
     }
 
     dealButton(yPos: number) {
@@ -685,7 +700,9 @@ export class GameScene extends PIXI.Container {
             this.startGame()
         })
         this.dealBtn.position.set(310, yPos)
-        this.addChild(this.dealBtn)
+        this.gameControlContainer.addChild(this.dealBtn);
+
+        // this.addChild(this.dealBtn)
     }
 
     hitButton(app: any, yPos: number) {
@@ -693,7 +710,9 @@ export class GameScene extends PIXI.Container {
             this.hitPlayer()
         })
         this.hitBtn.position.set(app.screen.width - 150, yPos)
-        this.addChild(this.hitBtn)
+        this.gamePlayContainer.addChild(this.hitBtn);
+
+        // this.addChild(this.hitBtn)
     }
 
     standButton(app: any, yPos: number) {
@@ -701,7 +720,8 @@ export class GameScene extends PIXI.Container {
             this.dealerTurn()
         })
         this.standBtn.position.set(app.screen.width - 60, yPos)
-        this.addChild(this.standBtn);
+        this.gamePlayContainer.addChild(this.standBtn)
+        this.addChild(this.gamePlayContainer);
     }
 
     newGameButton(app: any, yPos: number) {
@@ -713,7 +733,9 @@ export class GameScene extends PIXI.Container {
             yPos
         )
         this.newGameBtn.visible = false;
-        this.addChild(this.newGameBtn);
+        this.gamePlayContainer.addChild(this.newGameBtn);
+
+        // this.addChild(this.newGameBtn);
     }
 
     createBtn(app: PIXI.Application) {
@@ -742,6 +764,7 @@ export class GameScene extends PIXI.Container {
         this.updateBetControls();
         this.createPopUp(app)
         this.createInsurancePopup(app)
+        this.setPositions();
     }
 
     createInsurancePopup(app: PIXI.Application) {
@@ -799,6 +822,8 @@ export class GameScene extends PIXI.Container {
         this.undoBtn.alpha = 0.5
         this.doubleBtn.alpha = 0.5
         this.chipTray.alpha = 0.5
+
+
     }
 
     enableBettingControls() {
@@ -837,6 +862,8 @@ export class GameScene extends PIXI.Container {
 
     renderPlacedBet() {
         this.renderBetChips(this.betManager.currentBet)
+        this.gameControlContainer.visible = true;
+        this.gamePlayContainer.visible = false;
     }
 
     addBetText() {
@@ -949,5 +976,14 @@ export class GameScene extends PIXI.Container {
             chip.y = -(index * 6)  // stack upward
             this.betContainer.addChild(chip)
         })
+    }
+
+    setPositions() {
+        this.gameControlContainer.x = 0;
+        this.gamePlayContainer.x = 0;
+
+        this.gameControlContainer.visible = false;
+        this.gamePlayContainer.visible = false;
+
     }
 }
