@@ -64,6 +64,7 @@ export class GameScene extends PIXI.Container {
     startGame() {
         this.gameControlContainer.visible = false;
         this.gamePlayContainer.visible = true;
+        this.chipTray.visible = false;
 
         this.disableBettingControls();
         this.enableActionButtons();
@@ -545,6 +546,7 @@ export class GameScene extends PIXI.Container {
         this.disableHand();
 
         this.gamePlayContainer.visible = false;
+        this.chipTray.visible = true;
     }
 
     // addDealer(app: PIXI.Application) {
@@ -588,7 +590,7 @@ export class GameScene extends PIXI.Container {
 
     addPlayer(app: PIXI.Application) {
         // Hand 0 — main player hand position (right side)
-        this.handDisplay0.x = app.screen.width / 2 + 100
+        this.handDisplay0.x = app.screen.width / 2 + 250;
         this.handDisplay0.y = app.screen.height / 3
         this.handDisplay0.visible = false;
         this.addChild(this.handDisplay0)
@@ -645,8 +647,10 @@ export class GameScene extends PIXI.Container {
             this.updateBetControls();
         })
 
-        this.chipTray.x = app.screen.width / 2 - 200
+        window.innerWidth > window.innerHeight  ? this.chipTray.x = app.screen.width / 2 - 200 : this.chipTray.x = app.screen.width / 2 - 150;
         this.chipTray.y = app.screen.height - 60
+
+        window.innerWidth > window.innerHeight ? this.chipTray.scale.set(1) : this.chipTray.scale.set(0.7)
         this.addChild(this.chipTray);
     }
 
@@ -663,7 +667,7 @@ export class GameScene extends PIXI.Container {
             this.refreshHUD();
             this.updateBetControls();
         })
-        this.clearBtn.position.set(40, yPos)
+        window.innerWidth > window.innerHeight ? this.clearBtn.position.set(40, yPos) : this.clearBtn.position.set(40, yPos - 80);
         this.gameControlContainer.addChild(this.clearBtn);
         this.addChild(this.gameControlContainer);
     }
@@ -677,7 +681,7 @@ export class GameScene extends PIXI.Container {
             this.refreshHUD();
             this.updateBetControls();
         })
-        this.undoBtn.position.set(130, yPos)
+        window.innerWidth > window.innerHeight ? this.undoBtn.position.set(130, yPos) : this.undoBtn.position.set(40, yPos - 170)
         this.gameControlContainer.addChild(this.undoBtn);
         // this.addChild(this.undoBtn)
     }
@@ -689,7 +693,7 @@ export class GameScene extends PIXI.Container {
             // this.refreshHUD();
             // this.updateBetControls();
         })
-        this.doubleBtn.position.set(220, yPos)
+        window.innerWidth > window.innerHeight ? this.doubleBtn.position.set(220, yPos) : this.doubleBtn.position.set(40, yPos - 260)
         this.gameControlContainer.addChild(this.doubleBtn);
 
         // this.addChild(this.doubleBtn)
@@ -699,7 +703,7 @@ export class GameScene extends PIXI.Container {
         this.dealBtn = new IconButton('btn_deal2', 'DEAL', 48, 48, () => {
             this.startGame()
         })
-        this.dealBtn.position.set(310, yPos)
+        window.innerWidth > window.innerHeight ? this.dealBtn.position.set(310, yPos) : this.dealBtn.position.set(330, yPos - 80)
         this.gameControlContainer.addChild(this.dealBtn);
 
         // this.addChild(this.dealBtn)

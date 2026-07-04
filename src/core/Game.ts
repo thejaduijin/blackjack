@@ -18,7 +18,7 @@ export class Game {
             width: Config.width,
             height: Config.height,
             background: Config.background,
-            resizeTo: window,
+            // resizeTo: window,
         })
 
         document.body.appendChild(this.app.canvas)

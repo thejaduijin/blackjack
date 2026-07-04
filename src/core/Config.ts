@@ -1,5 +1,5 @@
 export const Config = {
-  width: 1280,
-  height: 720,
+  width: window.innerWidth,
+  height: window.innerHeight,
   background: 0x0b5e20,
 }
